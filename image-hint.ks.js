@@ -5,7 +5,7 @@ var PLUGIN_INFO =
 		<name>Image hint</name>
 		<description>Operate image by hitting hints</description>
 		<description lang="ja">ヒントを使って画像を操作</description>
-		<version>0.0.6</version>
+		<version>0.0.7</version>
 		<updateURL>https://raw.github.com/gist/899341/image-hint.ks.js</updateURL>
 		<iconURL>data:image/gif;base64,R0lGODlhIAAgAPcAAAAAAP////z8/Pb09evq8PDw9PX19
 		ubo7+fq8eTn7uXp8e3v8/Lz9fDx8+Xq8vL09/Hz9u/x9O7w80WT/lad/F+i/GKk/LDQ+r/Y+c3g+
@@ -61,6 +61,7 @@ plugins.options["image-hint.hint_query"]           = "img";
 
 === Change Log ===
 
+2013/02/26 (0.0.7) Firefox18に対応(Privacy)
 2012/01/14 (0.0.6) コード多少修正
 2012/01/14 (0.0.3) バグ調査コード
 2011/12/04 (0.0.2) 無限ループの回避
@@ -249,10 +250,14 @@ function saveImage(elem){
 			localFile.create(0x00,0644);
 		}
 
+        // privacy
+        let privacyContext = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                                   .getInterface(Components.interfaces.nsIWebNavigation)
+                                   .QueryInterface(Components.interfaces.nsILoadContext);
 		// save file to target
 		display.prettyPrint("Now saving ...", { timeout:10000, fade:100 });
 		
-		persist.saveURI(downloadURL, cache, refererURI , null, null, localFile);
+		persist.saveURI(downloadURL, cache, refererURI , null, null, localFile, privacyContext);
 		// goto persist.progressListener.onStateChange
 	}catch(e){
 		alert(e);
