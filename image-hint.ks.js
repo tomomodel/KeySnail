@@ -5,7 +5,7 @@ var PLUGIN_INFO =
 		<name>Image hint</name>
 		<description>Operate image by hitting hints</description>
 		<description lang="ja">ヒントを使って画像を操作</description>
-		<version>0.0.7</version>
+		<version>0.0.8</version>
 		<updateURL>https://raw.github.com/gist/899341/image-hint.ks.js</updateURL>
 		<iconURL>data:image/gif;base64,R0lGODlhIAAgAPcAAAAAAP////z8/Pb09evq8PDw9PX19
 		ubo7+fq8eTn7uXp8e3v8/Lz9fDx8+Xq8vL09/Hz9u/x9O7w80WT/lad/F+i/GKk/LDQ+r/Y+c3g+
@@ -61,6 +61,7 @@ plugins.options["image-hint.hint_query"]           = "img";
 
 === Change Log ===
 
+2013/05/01 (0.0.8) ファイル保存失敗の際にもう一回ループを追加（実際はあまり機能していないかもしれない。ただ、ファイルサイズが0のファイルに対しては上書きを行うようにした。）
 2013/02/26 (0.0.7) Firefox18に対応(Privacy)
 2012/01/14 (0.0.6) コード多少修正
 2012/01/14 (0.0.3) バグ調査コード
@@ -118,12 +119,30 @@ let saveMode           = pOptions['save_key'];
 let saveContinuousMode = pOptions['save_continuaous_key'];
 let hintQuery          = pOptions['hint_query'];
 
+/*
+実際に保存するのはsaveImageRealの方
+この関数はループを制御するためだけのもの
+*/
 function saveImage(elem){
+	let loopCount    = 0; // ループカウント
+	let maxLoopCount = 3; // 許容ループカウント
+	while(loopCount < maxLoopCount){
+	    let ret = saveImageReal(elem);
+	    if(ret === -1){
+	        // 恐らくファイル保存時にエラー
+	        loopCount ++;
+	    }else{
+	        // 保存成功
+	        return 0
+	    }
+    }
+}
+
+function saveImageReal(elem){
 	let dir      = pOptions['save_dir'];
 	let doc      = elem.ownerDocument;
 	let url      = window.makeURLAbsolute(elem.baseURI, elem.src);
 	var flg_same = false; // 同じ名前の画像が存在しているかどうか
-	
 	display.prettyPrint("Prepare to save file... => ", { timeout:10000, fade:100 });
 	
 	// リファラ
@@ -238,15 +257,21 @@ function saveImage(elem){
 		
 		// if file doesn't exist, create
 		if(localFile.exists()) {
-			// 同じ画像かの判断
-			flg_same = true;
-			var sameFile = localFile;
-			localFile = Components.classes["@mozilla.org/file/directory_service;1"]
-				.getService(Components.interfaces.nsIProperties)
-				.get("TmpD", Components.interfaces.nsIFile);
-			localFile.append(leafName);
-			localFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0664);
+		    // ファイルサイズのチェック
+		    if(localFile.fileSize === 0){
+		        // 作っただけのファイルなのでチェック無視
+		    }else{
+			    // 同じ画像かの判断
+			    flg_same = true;
+			    var sameFile = localFile;
+			    localFile = Components.classes["@mozilla.org/file/directory_service;1"]
+				    .getService(Components.interfaces.nsIProperties)
+				    .get("TmpD", Components.interfaces.nsIFile);
+			    localFile.append(leafName);
+			    localFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0664);
+		    }
 		} else {
+		
 			localFile.create(0x00,0644);
 		}
 
@@ -261,6 +286,7 @@ function saveImage(elem){
 		// goto persist.progressListener.onStateChange
 	}catch(e){
 		alert(e);
+		return -1;
 	}
 }
 
