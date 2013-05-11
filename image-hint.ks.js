@@ -5,7 +5,7 @@ var PLUGIN_INFO =
 		<name>Image hint</name>
 		<description>Operate image by hitting hints</description>
 		<description lang="ja">ヒントを使って画像を操作</description>
-		<version>0.0.8</version>
+		<version>0.0.9</version>
 		<updateURL>https://raw.github.com/gist/899341/image-hint.ks.js</updateURL>
 		<iconURL>data:image/gif;base64,R0lGODlhIAAgAPcAAAAAAP////z8/Pb09evq8PDw9PX19
 		ubo7+fq8eTn7uXp8e3v8/Lz9fDx8+Xq8vL09/Hz9u/x9O7w80WT/lad/F+i/GKk/LDQ+r/Y+c3g+
@@ -61,6 +61,7 @@ plugins.options["image-hint.hint_query"]           = "img";
 
 === Change Log ===
 
+2013/05/11 (0.0.9) 無限ループ発生してるかもしれないのでWhileやめた
 2013/05/01 (0.0.8) ファイル保存失敗の際にもう一回ループを追加（実際はあまり機能していないかもしれない。ただ、ファイルサイズが0のファイルに対しては上書きを行うようにした。）
 2013/02/26 (0.0.7) Firefox18に対応(Privacy)
 2012/01/14 (0.0.6) コード多少修正
@@ -124,6 +125,8 @@ let hintQuery          = pOptions['hint_query'];
 この関数はループを制御するためだけのもの
 */
 function saveImage(elem){
+    saveImageReal(elem);
+/*
 	let loopCount    = 0; // ループカウント
 	let maxLoopCount = 3; // 許容ループカウント
 	while(loopCount < maxLoopCount){
@@ -136,6 +139,7 @@ function saveImage(elem){
 	        return 0
 	    }
     }
+*/
 }
 
 function saveImageReal(elem){
